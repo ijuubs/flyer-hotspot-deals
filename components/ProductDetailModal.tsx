@@ -19,8 +19,6 @@ import {
   ThumbsUp, 
   ThumbsDown, 
   Crop,
-  Layers,
-  Image as ImageIcon,
   Scan,
   FileText,
   Copy
@@ -106,9 +104,9 @@ export default function ProductDetailModal({
     : (product.imageUrl || flyerCroppedUrl);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-hidden animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-xl overflow-hidden animate-in fade-in duration-150 font-sans">
       <div 
-        className="relative w-full max-w-4xl bg-slate-900 border-t sm:border border-slate-700/80 rounded-t-3xl sm:rounded-2xl shadow-2xl text-slate-100 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-2 duration-200"
+        className="relative w-full max-w-4xl bg-slate-900 border-t sm:border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl text-slate-100 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] animate-in slide-in-from-bottom duration-200 glass-panel"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile drag handle */}
@@ -117,20 +115,20 @@ export default function ProductDetailModal({
         </div>
 
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-800 bg-slate-900/90 shrink-0">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <span className="px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 truncate">
-              <Tag className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">{product.category}</span>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-800 bg-slate-950/80 shrink-0">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+            <span className="text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
+              <Tag className="w-3.5 h-3.5" />
+              {product.category}
             </span>
+            <span aria-hidden="true">·</span>
+            <span>Item {currentProductIndex + 1} of {totalProductsCount}</span>
             {product.badge && (
-              <span className="hidden sm:inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
-                {product.badge}
-              </span>
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="text-amber-400 font-bold">{product.badge}</span>
+              </>
             )}
-            <span className="text-xs text-slate-400 hidden md:inline shrink-0">
-              Item {currentProductIndex + 1} of {totalProductsCount}
-            </span>
           </div>
 
           {/* Navigation & Actions */}
@@ -138,7 +136,7 @@ export default function ProductDetailModal({
             {onOpenCropModal && (
               <button
                 onClick={onOpenCropModal}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-emerald-400 transition mr-1"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-emerald-400 transition mr-1"
                 title="Adjust product crop zone"
               >
                 <Crop className="w-3.5 h-3.5" />
@@ -149,7 +147,7 @@ export default function ProductDetailModal({
             {onPrevProduct && (
               <button
                 onClick={onPrevProduct}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
                 title="Previous flyer item"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -158,7 +156,7 @@ export default function ProductDetailModal({
             {onNextProduct && (
               <button
                 onClick={onNextProduct}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
                 title="Next flyer item"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -166,8 +164,8 @@ export default function ProductDetailModal({
             )}
             <button
               onClick={onClose}
-              className="p-1.5 ml-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
-              title="Close popup"
+              className="p-2 ml-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
+              title="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
@@ -175,54 +173,54 @@ export default function ProductDetailModal({
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-slate-800 bg-slate-950/60 px-3 sm:px-5 shrink-0 overflow-x-auto">
+        <div className="flex border-b border-slate-800 bg-slate-950/90 px-4 sm:px-6 shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab('comparison')}
-            className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 whitespace-nowrap transition min-h-[44px] ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition min-h-[44px] ${
               activeTab === 'comparison'
-                ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5'
+                ? 'border-emerald-400 text-emerald-400 bg-emerald-500/10'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             <Scale className="w-4 h-4 text-emerald-400" />
-            <span>Product Comparison</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300">
+            <span>Store Comparison</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-mono">
               {product.similarProducts.length + 1}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('details')}
-            className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 whitespace-nowrap transition min-h-[44px] ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition min-h-[44px] ${
               activeTab === 'details'
-                ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5'
+                ? 'border-emerald-400 text-emerald-400 bg-emerald-500/10'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <Sparkles className="w-4 h-4 text-emerald-400" />
             <span>Specs & Nutrition</span>
           </button>
 
           <button
             onClick={() => setActiveTab('ocr')}
-            className={`flex items-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 whitespace-nowrap transition min-h-[44px] ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition min-h-[44px] ${
               activeTab === 'ocr'
-                ? 'border-amber-500 text-amber-400 bg-amber-500/5'
+                ? 'border-amber-400 text-amber-400 bg-amber-500/10'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
             <Scan className="w-4 h-4 text-amber-400" />
-            <span>OCR Analysis</span>
+            <span>OCR Vision Analysis</span>
           </button>
         </div>
 
         {/* Scrollable Body Content */}
         <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-5">
           {/* Main Hero Card: Product Image + Price */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5 bg-slate-800/50 border border-slate-700/60 rounded-2xl p-3.5 sm:p-5">
-            {/* Product Image Section with Crop Toggle */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            {/* Product Image Section */}
             <div className="md:col-span-5 flex flex-col">
-              <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-700/80 shadow-inner group flex items-center justify-center">
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-inner group flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={displayImage || ''}
@@ -232,14 +230,14 @@ export default function ProductDetailModal({
 
                 {/* Badge tags overlay */}
                 <div className="absolute top-2 left-2 right-2 flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-950/90 text-white backdrop-blur-sm border border-slate-700 shadow">
+                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-950/90 text-slate-200 backdrop-blur-md border border-slate-800 shadow">
                     {imageMode === 'crop' ? 'Flyer Snippet Crop' : 'Product Photo'}
                   </span>
 
                   {onOpenCropModal && (
                     <button
                       onClick={onOpenCropModal}
-                      className="p-1 rounded-md bg-slate-900/90 hover:bg-emerald-600 text-slate-200 hover:text-white border border-slate-700 shadow backdrop-blur-sm transition"
+                      className="p-1.5 rounded-lg bg-slate-900/90 hover:bg-emerald-600 text-slate-200 hover:text-slate-950 border border-slate-700 shadow backdrop-blur-md transition"
                       title="Adjust crop rectangle"
                     >
                       <Crop className="w-3.5 h-3.5" />
@@ -248,25 +246,20 @@ export default function ProductDetailModal({
                 </div>
 
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/90 text-white backdrop-blur-sm">
+                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-emerald-500 text-slate-950 shadow">
                     {product.stockStatus === 'in_stock' ? 'In Stock' : 'Selling Fast'}
                   </span>
-                  {product.badge && (
-                    <span className="sm:hidden px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/90 text-slate-950">
-                      {product.badge}
-                    </span>
-                  )}
                 </div>
               </div>
 
-              {/* Image Mode Switcher & Crop Button */}
+              {/* Image Mode Switcher */}
               <div className="flex items-center justify-between gap-2 mt-2">
-                <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-0.5 text-[11px]">
+                <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-0.5 text-xs">
                   <button
                     onClick={() => setImageMode('crop')}
-                    className={`px-2 py-1 rounded transition ${
+                    className={`px-3 py-1 rounded-lg transition font-bold ${
                       imageMode === 'crop'
-                        ? 'bg-emerald-600 text-white font-semibold'
+                        ? 'bg-emerald-500 text-slate-950 shadow-sm'
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
@@ -274,9 +267,9 @@ export default function ProductDetailModal({
                   </button>
                   <button
                     onClick={() => setImageMode('photo')}
-                    className={`px-2 py-1 rounded transition ${
+                    className={`px-3 py-1 rounded-lg transition font-bold ${
                       imageMode === 'photo'
-                        ? 'bg-emerald-600 text-white font-semibold'
+                        ? 'bg-emerald-500 text-slate-950 shadow-sm'
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
@@ -287,9 +280,9 @@ export default function ProductDetailModal({
                 {onOpenCropModal && (
                   <button
                     onClick={onOpenCropModal}
-                    className="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1"
+                    className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1"
                   >
-                    <Crop className="w-3 h-3" /> Re-crop
+                    <Crop className="w-3.5 h-3.5" /> Re-crop
                   </button>
                 )}
               </div>
@@ -298,57 +291,57 @@ export default function ProductDetailModal({
             {/* Product Title & Deal Highlights */}
             <div className="md:col-span-7 flex flex-col justify-between">
               <div>
-                <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
                   {product.brand}
                 </div>
-                <h2 className="text-lg sm:text-2xl font-bold text-white mt-0.5 leading-snug">
+                <h2 className="text-xl sm:text-2xl font-black text-white mt-0.5 leading-snug">
                   {product.title}
                 </h2>
 
                 {/* Price Display */}
-                <div className="flex flex-wrap items-baseline gap-2 sm:gap-3 mt-2 sm:mt-3">
-                  <span className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+                <div className="flex flex-wrap items-baseline gap-3 mt-3 font-mono">
+                  <span className="text-3xl sm:text-4xl font-black text-white tracking-tight tabular-nums">
                     ${product.dealPrice.toFixed(2)}
                   </span>
                   {product.originalPrice > product.dealPrice && (
                     <>
-                      <span className="text-sm sm:text-base text-slate-400 line-through">
+                      <span className="text-base text-slate-500 line-through tabular-nums">
                         ${product.originalPrice.toFixed(2)}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
-                        <TrendingDown className="w-3 h-3" />
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                        <TrendingDown className="w-3.5 h-3.5" />
                         Save {product.discountPercent}%
                       </span>
                     </>
                   )}
-                  <span className="text-[11px] sm:text-xs text-slate-400 px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                  <span className="text-xs text-slate-400 font-sans px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-800">
                     {product.unitPrice}
                   </span>
                 </div>
 
                 {/* Description */}
-                <p className="text-xs sm:text-sm text-slate-300 mt-2 sm:mt-3 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 mt-3 leading-relaxed">
                   {product.description}
                 </p>
 
-                {/* Deal Score Gauge */}
-                <div className="mt-3 sm:mt-4 p-3 rounded-xl bg-slate-900/80 border border-slate-700/80">
+                {/* Deal Score Rating */}
+                <div className="mt-4 p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <span className="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
                       <Award className="w-4 h-4 text-amber-400" />
                       Deal Score Rating
                     </span>
-                    <span className="text-xs font-bold text-amber-400">
+                    <span className="text-xs font-mono font-black text-amber-400">
                       {product.dealScore} / 10
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-slate-900 overflow-hidden">
                     <div 
-                      className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-500"
+                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-500"
                       style={{ width: `${(product.dealScore / 10) * 100}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1.5">
+                  <p className="text-[11px] text-slate-400 mt-2 leading-tight">
                     💡 {product.dealScoreRationale}
                   </p>
                 </div>
@@ -360,34 +353,34 @@ export default function ProductDetailModal({
           {activeTab === 'comparison' && (
             <div className="space-y-4">
               {/* Shopper Value Verdict Banner */}
-              <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border border-emerald-500/40">
-                <div className="flex items-start gap-2.5 sm:gap-3">
-                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 shrink-0">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-lg">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
                         Shopper Verdict: {product.smartVerdict.headline}
                       </span>
-                      <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500 text-slate-950">
                         {product.smartVerdict.recommendation === 'strong_buy' ? '★ Highly Recommended' : 'Fair Market Deal'}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-200 mt-1">
+                    <p className="text-xs sm:text-sm text-slate-200 mt-1 leading-relaxed">
                       {product.smartVerdict.reasoning}
                     </p>
-                    <div className="mt-1.5 text-xs text-slate-400 flex flex-wrap items-center gap-1 sm:gap-2">
-                      <span className="text-slate-300 font-semibold">Best suited for:</span>
+                    <div className="mt-2 text-xs text-slate-400 flex flex-wrap items-center gap-2">
+                      <span className="text-slate-200 font-bold">Best suited for:</span>
                       <span>{product.smartVerdict.bestFor}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Comparative Table / Responsive Cards */}
+              {/* Comparative Market Cards */}
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-white mb-2.5 flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-extrabold text-white mb-3 flex items-center gap-2">
                   <Scale className="w-4 h-4 text-emerald-400" />
                   Side-by-Side Market Comparison
                 </h3>
@@ -396,65 +389,64 @@ export default function ProductDetailModal({
                   {/* Card 1: THIS FLYER ITEM */}
                   <div 
                     onClick={() => setSelectedAlternative(null)}
-                    className={`rounded-xl p-3.5 sm:p-4 border transition cursor-pointer relative min-h-[44px] ${
+                    className={`rounded-2xl p-4 border transition cursor-pointer relative min-h-[44px] ${
                       selectedAlternative === null
-                        ? 'bg-emerald-500/10 border-emerald-500 ring-2 ring-emerald-500/40'
-                        : 'bg-slate-800/40 border-slate-700/80 hover:border-slate-600'
+                        ? 'bg-emerald-500/10 border-emerald-500 ring-2 ring-emerald-500/30'
+                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 uppercase tracking-wider">
-                        Flyer Deal
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 uppercase tracking-wider">
+                        Flyer Special
                       </span>
-                      <span className="text-[11px] font-semibold text-emerald-400 uppercase">
+                      <span className="text-xs font-bold text-emerald-400 uppercase">
                         {product.brand}
                       </span>
                     </div>
 
-                    <h4 className="text-xs sm:text-sm font-bold text-white mt-1 leading-snug line-clamp-2">
+                    <h4 className="text-xs sm:text-sm font-extrabold text-white mt-1 leading-snug line-clamp-2">
                       {product.title}
                     </h4>
 
                     {/* Price comparison */}
-                    <div className="mt-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-700/60">
-                      <div className="text-xl sm:text-2xl font-extrabold text-white">
+                    <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono">
+                      <div className="text-2xl font-black text-white tabular-nums">
                         ${product.dealPrice.toFixed(2)}
                       </div>
-                      <div className="text-[11px] text-slate-400">
+                      <div className="text-[11px] text-slate-400 font-sans mt-0.5">
                         {product.unitPrice} ({product.unit})
                       </div>
-                      <div className="mt-1 text-[11px] font-semibold text-emerald-400">
+                      <div className="mt-1.5 text-[11px] font-bold text-emerald-400 font-sans">
                         Save {product.discountPercent}% this week
                       </div>
                     </div>
 
                     {/* Rating & Review */}
-                    <div className="flex items-center gap-1.5 mt-2.5 text-xs text-slate-300">
+                    <div className="flex items-center gap-1.5 mt-3 text-xs text-slate-300">
                       <div className="flex text-amber-400">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-amber-400" />
+                          <Star key={`flyer-star-${i}`} className="w-3 h-3 fill-amber-400" />
                         ))}
                       </div>
-                      <span className="font-bold">4.8</span>
+                      <span className="font-extrabold">4.8</span>
                       <span className="text-slate-500 text-[10px]">(Verified Promo)</span>
                     </div>
 
-                    {/* Pros */}
-                    <div className="mt-2.5 space-y-1">
-                      <div className="text-[11px] font-semibold text-slate-300">Why choose this:</div>
+                    {/* Highlights */}
+                    <div className="mt-3 space-y-1.5 text-xs">
                       {product.highlights.slice(0, 2).map((h, idx) => (
-                        <div key={idx} className="flex items-start gap-1.5 text-xs text-slate-300">
-                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <div key={`hl-flyer-${idx}`} className="flex items-start gap-1.5 text-slate-300">
+                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5 stroke-[3]" />
                           <span>{h}</span>
                         </div>
                       ))}
                     </div>
 
                     {/* Select radio */}
-                    <div className="mt-3 pt-2.5 border-t border-slate-700/60 flex items-center justify-between">
-                      <span className="text-xs text-slate-300 font-medium">Selected for trip:</span>
+                    <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+                      <span className="text-xs text-slate-300 font-bold">Select this item:</span>
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                        selectedAlternative === null ? 'bg-emerald-500 text-slate-950' : 'border border-slate-600'
+                        selectedAlternative === null ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-700'
                       }`}>
                         {selectedAlternative === null && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </span>
@@ -462,86 +454,86 @@ export default function ProductDetailModal({
                   </div>
 
                   {/* CARDS 2 & 3: SIMILAR / ALTERNATIVE ITEMS */}
-                  {product.similarProducts.map((alt) => {
+                  {product.similarProducts.map((alt, altIdx) => {
                     const isSelected = selectedAlternative?.id === alt.id;
                     const priceDiff = alt.price - product.dealPrice;
 
                     return (
                       <div
-                        key={alt.id}
+                        key={`sim-${product.id}-${alt.id || 'alt'}-${altIdx}`}
                         onClick={() => setSelectedAlternative(alt)}
-                        className={`rounded-xl p-3.5 sm:p-4 border transition cursor-pointer relative min-h-[44px] ${
+                        className={`rounded-2xl p-4 border transition cursor-pointer relative min-h-[44px] ${
                           isSelected
-                            ? 'bg-indigo-500/10 border-indigo-500 ring-2 ring-indigo-500/40'
-                            : 'bg-slate-800/40 border-slate-700/80 hover:border-slate-600'
+                            ? 'bg-emerald-500/10 border-emerald-500 ring-2 ring-emerald-500/30'
+                            : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-1 mb-1">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800">
                             {alt.badge || 'Alternative'}
                           </span>
-                          <span className="text-[11px] font-semibold text-indigo-400 uppercase">
+                          <span className="text-xs font-bold text-slate-400 uppercase">
                             {alt.brand}
                           </span>
                         </div>
 
-                        <h4 className="text-xs sm:text-sm font-bold text-white mt-1 leading-snug line-clamp-2">
+                        <h4 className="text-xs sm:text-sm font-extrabold text-white mt-1 leading-snug line-clamp-2">
                           {alt.name}
                         </h4>
 
                         {/* Price comparison */}
-                        <div className="mt-2.5 p-2.5 rounded-lg bg-slate-950/60 border border-slate-700/60">
-                          <div className="text-xl sm:text-2xl font-extrabold text-white">
+                        <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono">
+                          <div className="text-2xl font-black text-white tabular-nums">
                             ${alt.price.toFixed(2)}
                           </div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-slate-400 font-sans mt-0.5">
                             {alt.unitPrice} ({alt.unit})
                           </div>
-                          <div className="mt-1 text-[11px] font-semibold">
+                          <div className="mt-1.5 text-[11px] font-bold font-sans">
                             {priceDiff > 0 ? (
                               <span className="text-amber-400">
-                                +${priceDiff.toFixed(2)} higher out-of-pocket
+                                +${priceDiff.toFixed(2)} higher cost
                               </span>
                             ) : (
                               <span className="text-emerald-400">
-                                -${Math.abs(priceDiff).toFixed(2)} lower upfront cost
+                                -${Math.abs(priceDiff).toFixed(2)} lower cost
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {/* Rating & Review */}
-                        <div className="flex items-center gap-1.5 mt-2.5 text-xs text-slate-300">
+                        {/* Rating */}
+                        <div className="flex items-center gap-1.5 mt-3 text-xs text-slate-300">
                           <div className="flex text-amber-400">
                             {[...Array(Math.floor(alt.rating))].map((_, i) => (
-                              <Star key={i} className="w-3 h-3 fill-amber-400" />
+                              <Star key={`alt-star-${altIdx}-${i}`} className="w-3 h-3 fill-amber-400" />
                             ))}
                           </div>
-                          <span className="font-bold">{alt.rating}</span>
+                          <span className="font-extrabold">{alt.rating}</span>
                           <span className="text-slate-500 text-[10px]">({alt.reviewCount})</span>
                         </div>
 
                         {/* Pros & Cons */}
-                        <div className="mt-2.5 space-y-1 text-xs">
+                        <div className="mt-3 space-y-1.5 text-xs">
                           {alt.pros.slice(0, 1).map((pro, pIdx) => (
-                            <div key={pIdx} className="flex items-start gap-1.5 text-emerald-300">
-                              <ThumbsUp className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" />
+                            <div key={`pro-${altIdx}-${pIdx}`} className="flex items-start gap-1.5 text-emerald-300">
+                              <ThumbsUp className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                               <span>{pro}</span>
                             </div>
                           ))}
                           {alt.cons.slice(0, 1).map((con, cIdx) => (
-                            <div key={cIdx} className="flex items-start gap-1.5 text-rose-300">
-                              <ThumbsDown className="w-3 h-3 text-rose-400 shrink-0 mt-0.5" />
+                            <div key={`con-${altIdx}-${cIdx}`} className="flex items-start gap-1.5 text-rose-300">
+                              <ThumbsDown className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
                               <span>{con}</span>
                             </div>
                           ))}
                         </div>
 
                         {/* Select radio */}
-                        <div className="mt-3 pt-2.5 border-t border-slate-700/60 flex items-center justify-between">
-                          <span className="text-xs text-slate-300 font-medium">Choose alternative:</span>
+                        <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+                          <span className="text-xs text-slate-300 font-bold">Select alternative:</span>
                           <span className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                            isSelected ? 'bg-indigo-500 text-white' : 'border border-slate-600'
+                            isSelected ? 'bg-emerald-500 text-slate-950 font-bold' : 'border border-slate-700'
                           }`}>
                             {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                           </span>
@@ -558,11 +550,11 @@ export default function ProductDetailModal({
           {activeTab === 'details' && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-white mb-2">Key Highlights</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <h3 className="text-xs sm:text-sm font-extrabold text-white mb-2.5">Key Product Highlights</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {product.highlights.map((h, i) => (
-                    <div key={i} className="flex items-start gap-2 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-200">
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div key={`spec-hl-${i}`} className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-200">
+                      <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 stroke-[3]" />
                       <span>{h}</span>
                     </div>
                   ))}
@@ -570,17 +562,17 @@ export default function ProductDetailModal({
               </div>
 
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-white mb-2">Product Specifications</h3>
-                <div className="rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800 bg-slate-900/60 text-xs">
+                <h3 className="text-xs sm:text-sm font-extrabold text-white mb-2.5">Product Specifications</h3>
+                <div className="rounded-2xl border border-slate-800 overflow-hidden divide-y divide-slate-800 bg-slate-950 text-xs">
                   {Object.entries(product.specs).map(([key, val]) => (
-                    <div key={key} className="flex justify-between items-center px-4 py-2.5">
-                      <span className="text-slate-400">{key}</span>
-                      <span className="text-white font-semibold">{val}</span>
+                    <div key={`spec-entry-${key}`} className="flex justify-between items-center px-4 py-3">
+                      <span className="text-slate-400 font-medium">{key}</span>
+                      <span className="text-white font-bold">{val}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">Unit Price</span>
-                    <span className="text-emerald-400 font-bold">{product.unitPrice}</span>
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-slate-400 font-medium">Standard Rate</span>
+                    <span className="text-emerald-400 font-mono font-extrabold">{product.unitPrice}</span>
                   </div>
                 </div>
               </div>
@@ -590,18 +582,18 @@ export default function ProductDetailModal({
           {/* TAB 3: OCR RAW TEXT & DEEP VISION ANALYSIS */}
           {activeTab === 'ocr' && (
             <div className="space-y-4">
-              <div className="p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-2.5">
-                    <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400 shrink-0">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
                       <Scan className="w-5 h-5" />
                     </div>
                     <div>
                       <h4 className="text-xs sm:text-sm font-bold text-amber-300">
-                        Verbatim Optical Character Recognition (OCR) Output
+                        Verbatim OCR Vision Output
                       </h4>
                       <p className="text-xs text-slate-300 mt-0.5">
-                        Extracted text directly parsed from the flyer image scan by Gemini 2.5/3.5 Vision OCR.
+                        Transcribed text extracted from the scanned promotional flyer page by Gemini Vision OCR.
                       </p>
                     </div>
                   </div>
@@ -614,61 +606,45 @@ export default function ProductDetailModal({
                           setTimeout(() => setCopiedOcr(false), 2000);
                         }
                       }}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-amber-300 flex items-center gap-1.5 transition shrink-0"
+                      className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300 flex items-center gap-1.5 transition shrink-0"
                     >
-                      {copiedOcr ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedOcr ? 'Copied' : 'Copy OCR'}</span>
+                      {copiedOcr ? <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedOcr ? 'Copied' : 'Copy Text'}</span>
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Raw text snippet container */}
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-amber-200/90 leading-relaxed overflow-x-auto select-all">
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs text-amber-300 leading-relaxed select-all">
                 <div className="text-[10px] uppercase font-sans font-bold text-slate-500 mb-1 flex items-center gap-1">
-                  <FileText className="w-3 h-3" /> Transcribed Banner & Label Text:
+                  <FileText className="w-3.5 h-3.5" /> Transcribed Flyer Text:
                 </div>
-                {product.rawOcrText || `${product.brand.toUpperCase()} - ${product.title} $${product.dealPrice.toFixed(2)} ${product.unit}`}
+                {product.rawOcrText || `${product.brand.toUpperCase()} ${product.title} $${product.dealPrice.toFixed(2)} ${product.unit}`}
               </div>
 
               {/* OCR Mapping Grid */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider">
                   OCR Field Extraction Mapping
                 </h4>
-                <div className="rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800 bg-slate-900/60 text-xs">
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">Printed Brand Title</span>
-                    <span className="text-white font-mono font-semibold">{product.brand}</span>
+                <div className="rounded-2xl border border-slate-800 overflow-hidden divide-y divide-slate-800 bg-slate-950 text-xs font-mono">
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-slate-400 font-sans">Brand Title</span>
+                    <span className="text-white font-bold">{product.brand}</span>
                   </div>
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">Parsed Product Name</span>
-                    <span className="text-white font-mono font-semibold">{product.title}</span>
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-slate-400 font-sans">Product Name</span>
+                    <span className="text-white font-bold">{product.title}</span>
                   </div>
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">Price Badge Readout</span>
-                    <span className="text-emerald-400 font-mono font-bold">${product.dealPrice.toFixed(2)} ({product.unit})</span>
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-slate-400 font-sans">Parsed Price Badge</span>
+                    <span className="text-emerald-400 font-bold tabular-nums">${product.dealPrice.toFixed(2)} ({product.unit})</span>
                   </div>
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">Normal Price Parsed</span>
-                    <span className="text-slate-300 font-mono">${product.originalPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">Spatial Layout Tile</span>
-                    <span className="text-amber-300 font-mono font-semibold">
-                      Tile #{product.tileIndex || 1} ({product.dealTileType || 'grid_tile'})
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">Flyer Box Coordinates (Normalized)</span>
-                    <span className="text-amber-400 font-mono text-[11px]">
-                      x: {product.box.x}%, y: {product.box.y}%, w: {product.box.width}%, h: {product.box.height}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2.5">
-                    <span className="text-slate-400">OCR Read Status</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      High-Precision Scan
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <span className="text-slate-400 font-sans">Bounding Box Coordinates</span>
+                    <span className="text-amber-400 text-[11px]">
+                      x:{product.box.x}% y:{product.box.y}% w:{product.box.width}% h:{product.box.height}%
                     </span>
                   </div>
                 </div>
@@ -678,23 +654,23 @@ export default function ProductDetailModal({
         </div>
 
         {/* Bottom Sticky Action Footer */}
-        <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-slate-800 bg-slate-950/95 flex flex-wrap items-center justify-between gap-3 shrink-0 safe-area-bottom">
+        <div className="px-4 sm:px-6 py-4 border-t border-slate-800 bg-slate-950/95 flex flex-wrap items-center justify-between gap-3 shrink-0 safe-area-bottom">
           {/* Quantity Stepper */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center bg-slate-800 border border-slate-700 rounded-xl p-1">
+            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1">
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition"
                 title="Decrease quantity"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
-              <span className="w-8 text-center font-bold text-sm text-white">
+              <span className="w-8 text-center font-mono font-bold text-sm text-white tabular-nums">
                 {quantity}
               </span>
               <button
                 onClick={() => setQuantity((q) => Math.min(20, q + 1))}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition"
                 title="Increase quantity"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -702,15 +678,15 @@ export default function ProductDetailModal({
             </div>
 
             <div>
-              <div className="text-[11px] text-slate-400">
+              <div className="text-[11px] text-slate-400 font-medium">
                 Total ({quantity} {currentUnit}):
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-lg sm:text-xl font-bold text-white">
+              <div className="flex items-baseline gap-1.5 font-mono">
+                <span className="text-xl font-black text-white tabular-nums">
                   ${totalCost.toFixed(2)}
                 </span>
                 {totalSavings > 0 && selectedAlternative === null && (
-                  <span className="text-[11px] text-emerald-400 font-semibold">
+                  <span className="text-xs text-emerald-400 font-bold font-sans">
                     (Save ${totalSavings.toFixed(2)})
                   </span>
                 )}
@@ -722,10 +698,10 @@ export default function ProductDetailModal({
           <div className="flex-1 sm:flex-initial">
             <button
               onClick={handleAdd}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg transition active:scale-95 min-h-[44px] ${
+              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-extrabold text-xs sm:text-sm shadow-xl transition active:scale-95 min-h-[44px] ${
                 addedSuccess
-                  ? 'bg-emerald-500 text-slate-950'
-                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
+                  ? 'bg-emerald-500 text-slate-950 font-black'
+                  : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-emerald-600/25'
               }`}
             >
               {addedSuccess ? (

@@ -47,6 +47,7 @@ export interface ProductDetail {
   specs: Record<string, string>;
   stockStatus: 'in_stock' | 'limited' | 'selling_fast';
   box: HotspotBox;
+  clusterId?: string; // Optional auto-grouped cluster ID
   imageUrl?: string;
   croppedImageUrl?: string;
   similarProducts: SimilarProduct[];
@@ -56,6 +57,16 @@ export interface ProductDetail {
     reasoning: string;
     bestFor: string;
   };
+}
+
+export interface HotspotCluster {
+  id: string;
+  name: string;
+  category: string;
+  box: HotspotBox;
+  productIds: string[];
+  totalDealsCount: number;
+  averagePrice: number;
 }
 
 export interface Flyer {
@@ -70,6 +81,7 @@ export interface Flyer {
   rawHeaderOcr?: string; // Verbatim flyer banner header OCR text
   categories: string[];
   products: ProductDetail[];
+  clusters?: HotspotCluster[];
 }
 
 export interface CartItem {

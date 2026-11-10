@@ -10,6 +10,32 @@ export async function compressImageForUpload(
   quality: number = 0.88
 ): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
+    if (!dataUrlOrUrl) {
+      resolve({ base64: '', mimeType: 'image/jpeg' });
+      return;
+    }
+
+    const fallbackToDataUrl = async (urlStr: string): Promise<string> => {
+      if (urlStr.startsWith('data:')) {
+        return urlStr;
+      }
+      if (typeof window !== 'undefined' && (urlStr.startsWith('blob:') || urlStr.startsWith('http'))) {
+        try {
+          const res = await fetch(urlStr);
+          const blob = await res.blob();
+          return await new Promise<string>((resData) => {
+            const r = new FileReader();
+            r.onload = () => resData((r.result as string) || urlStr);
+            r.onerror = () => resData(urlStr);
+            r.readAsDataURL(blob);
+          });
+        } catch {
+          return urlStr;
+        }
+      }
+      return urlStr;
+    };
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
@@ -35,7 +61,9 @@ export async function compressImageForUpload(
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          resolve({ base64: dataUrlOrUrl, mimeType: 'image/jpeg' });
+          fallbackToDataUrl(dataUrlOrUrl).then((b64) =>
+            resolve({ base64: b64, mimeType: 'image/jpeg' })
+          );
           return;
         }
 
@@ -54,12 +82,16 @@ export async function compressImageForUpload(
         resolve({ base64: compressed, mimeType: 'image/jpeg' });
       } catch (err) {
         console.warn('Canvas image optimization error:', err);
-        resolve({ base64: dataUrlOrUrl, mimeType: 'image/jpeg' });
+        fallbackToDataUrl(dataUrlOrUrl).then((b64) =>
+          resolve({ base64: b64, mimeType: 'image/jpeg' })
+        );
       }
     };
 
     img.onerror = () => {
-      resolve({ base64: dataUrlOrUrl, mimeType: 'image/jpeg' });
+      fallbackToDataUrl(dataUrlOrUrl).then((b64) =>
+        resolve({ base64: b64, mimeType: 'image/jpeg' })
+      );
     };
 
     img.src = dataUrlOrUrl;

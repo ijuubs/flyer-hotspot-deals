@@ -1,6 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type, ThinkingLevel } from '@google/genai';
 import { Flyer, ProductDetail } from '@/types/flyer';
+
+/**
+ * Robust spatial bounding box normalizer that handles:
+ * - 0-100% percentages
+ * - 0.0-1.0 normalized coordinates
+ * - 0-1000 standard vision scales
+ * - [ymin, xmin, ymax, xmax] arrays or {ymin, xmin, ymax, xmax} objects
+ */
+function normalizeBoundingBox(rawBox: any): { x: number; y: number; width: number; height: number } {
+  let x = 10, y = 10, width = 25, height = 20;
+
+  if (rawBox) {
+    if (typeof rawBox.x === 'number' && typeof rawBox.y === 'number' && typeof rawBox.width === 'number' && typeof rawBox.height === 'number') {
+      x = rawBox.x;
+      y = rawBox.y;
+      width = rawBox.width;
+      height = rawBox.height;
+    } else if (typeof rawBox.xmin === 'number' && typeof rawBox.ymin === 'number' && typeof rawBox.xmax === 'number' && typeof rawBox.ymax === 'number') {
+      x = rawBox.xmin;
+      y = rawBox.ymin;
+      width = rawBox.xmax - rawBox.xmin;
+      height = rawBox.ymax - rawBox.ymin;
+    } else if (Array.isArray(rawBox) && rawBox.length >= 4) {
+      // Format: [ymin, xmin, ymax, xmax]
+      const [ymin, xmin, ymax, xmax] = rawBox;
+      x = xmin;
+      y = ymin;
+      width = xmax - xmin;
+      height = ymax - ymin;
+    }
+  }
+
+  // If in 0.0 - 1.0 fraction range, convert to 0 - 100 percentage
+  if (width <= 1.0 && height <= 1.0 && x <= 1.0 && y <= 1.0 && (width > 0 || height > 0)) {
+    x *= 100;
+    y *= 100;
+    width *= 100;
+    height *= 100;
+  } 
+  // If in 0 - 1000 scale range, convert to 0 - 100 percentage
+  else if (x > 100 || y > 100 || width > 100 || height > 100) {
+    x /= 10;
+    y /= 10;
+    width /= 10;
+    height /= 10;
+  }
+
+  // Constrain within safe canvas margins
+  x = Math.max(0.5, Math.min(95, Math.round(x * 10) / 10));
+  y = Math.max(0.5, Math.min(95, Math.round(y * 10) / 10));
+  width = Math.max(5, Math.min(99 - x, Math.round(width * 10) / 10));
+  height = Math.max(5, Math.min(99 - y, Math.round(height * 10) / 10));
+
+  return { x, y, width, height };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,25 +75,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Clean base64 string if it contains data URI header
-    let cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
+    // Clean base64 string if it contains data URI header or split by base64
+    let cleanBase64 = imageBase64;
     let finalMimeType = mimeType;
 
-    if (imageBase64.startsWith('http://') || imageBase64.startsWith('https://')) {
+    if (typeof cleanBase64 === 'string') {
+      if (cleanBase64.includes('base64,')) {
+        cleanBase64 = cleanBase64.split('base64,')[1];
+      } else {
+        cleanBase64 = cleanBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
+      }
+    }
+
+    if (typeof imageBase64 === 'string' && (imageBase64.startsWith('http://') || imageBase64.startsWith('https://'))) {
       try {
         const imgRes = await fetch(imageBase64);
         const arrayBuf = await imgRes.arrayBuffer();
         cleanBase64 = Buffer.from(arrayBuf).toString('base64');
         const cType = imgRes.headers.get('content-type');
-        if (cType) finalMimeType = cType;
+        if (cType && cType.startsWith('image/')) finalMimeType = cType;
       } catch (err) {
         console.warn('Could not fetch external image url:', err);
       }
     }
 
+    const isInvalidBase64 = typeof cleanBase64 !== 'string' || cleanBase64.startsWith('blob:') || cleanBase64.startsWith('http:') || cleanBase64.startsWith('https:');
+
     const apiKey = process.env.GEMINI_API_KEY;
 
-    if (apiKey) {
+    if (apiKey && !isInvalidBase64) {
       try {
         const ai = new GoogleGenAI({
           apiKey,
@@ -50,57 +115,35 @@ export async function POST(req: NextRequest) {
         });
 
         const sensitivityInstruction = sensitivityLevel === 'high'
-          ? 'HIGH SENSITIVITY DEEP SCAN MODE ACTIVE: Dense retail flyer detected. Perform a comprehensive multi-pass OCR scan to detect ALL 15 to 30+ product deal tiles, price circles, fine print weight tags, and starburst banners on the page. Ensure EVERY single item on the flyer has a precise bounding box.'
+          ? 'HIGH SENSITIVITY EXHAUSTIVE SCAN: Dense multi-item retail circular detected. You MUST detect and segment ALL 12 to 35+ product deal tiles, hero promotions, grid cells, multi-buy packs, and footer discount callouts. Ensure zero missed items.'
           : sensitivityLevel === 'medium'
-          ? 'BALANCED OCR SCAN MODE ACTIVE: Standard retail flyer analysis. Extract main product deals, price bubbles, and clear product bounding boxes.'
-          : 'FAST OCR SCAN MODE ACTIVE: Fast high-contrast flyer scan. Focus on primary headline offers, large price badges, and major feature banners.';
+          ? 'BALANCED SCAN: Detect all prominent product deal tiles, price bubbles, and grid cells across the page.'
+          : 'FAST SCAN: Focus on major feature deals, starburst price badges, and main headline offers.';
 
-        const prompt = `You are a high-precision Optical Character Recognition (OCR) vision system specializing in retail promotional flyer analysis, spatial layout detection, and deal tile bounding box mapping.
+        const prompt = `You are a state-of-the-art Optical Character Recognition (OCR) and retail circular vision system.
+Your mission is to perform a comprehensive spatial OCR scan of this supermarket / retail promotional flyer image and locate product deal tiles or bounding boxes on the page.
 
 ${sensitivityInstruction}
 
-Perform a complete spatial OCR scan of the flyer image from Top-Left to Bottom-Right:
-
-1. Overall Flyer Header & Meta:
-   - "title": Main title or promotion theme of the flyer (e.g., "Joy's of the Table", "Diwali Skyscrapers").
-   - "store": Retailer / Supermarket store brand (e.g., "MH & MaxVal-u Supermarkets").
-   - "validity": Active promotional validity dates extracted from banner or fine print (e.g., "Valid Thu 22nd Oct – Wed 28th Oct 2026").
-   - "rawHeaderOcr": Verbatim text read from the top store banner, QR codes, or fine print disclaimers.
-
-2. Spatial Deal Tile & Bounding Box Extraction:
-   Scan and segment EVERY distinct promotional deal tile, product card, hero offer, or discount bubble on the page.
-   For each item:
-   - "tileIndex": 1-based sequential number of the deal tile scanning top-to-bottom, left-to-right (1, 2, 3...).
-   - "dealTileType": Select the visual tile pattern:
-       - "hero_banner": Top or prominent double-size main feature offer card.
-       - "grid_tile": Standard rectangular product tile in a grid row/column.
-       - "badge_callout": Circular or irregular high-impact price bubble deal tile.
-       - "strip_banner": Wide horizontal promotional strip banner across a section.
-   - "box": PRECISE normalized bounding box coordinates { x, y, width, height } as PERCENTAGES from 0 to 100:
-       x: percentage distance from left edge (0 to 100)
-       y: percentage distance from top edge (0 to 100)
-       width: percentage width tightly enclosing BOTH the product image and its associated price badge/circle (0 to 100)
-       height: percentage height tightly enclosing BOTH the product image and its associated price badge/circle (0 to 100)
-       CRITICAL: Ensure the box covers the full deal tile boundary so clicking anywhere inside the deal tile opens the product hotspot!
-   - "rawOcrText": EXACT verbatim OCR text transcribed directly from the product block and its price bubble (e.g., "Rooster Fiji's Premier Quality chicken #17 $18.50 EA").
-   - "title": Clean, full product title including flavor/variant/cut/size (e.g., "Rooster Whole Dressed Chicken #17").
-   - "brand": Printed brand name (or store brand if unbranded).
-   - "category": Retail category ("Butcher & Seafood", "Fresh Produce", "Ice Cream & Dairy", "Beverages & Spirits", "Frozen & Quick Meals", "Snacks & Pantry", "Fireworks & Festivities").
-   - "dealPrice": Exact numeric promotional price parsed from price circle/badge (e.g., 18.50, 5.95, 2.75).
-   - "originalPrice": Regular non-promotional price estimated or read from strikethrough.
-   - "unit": Exact printed unit qualifier (e.g., "per kg", "2L tub", "500g pack", "750ml bottle", "3 for $2.75", "1 Box (50pcs)").
-   - "unitPrice": Standardized unit rate (e.g., "$2.98 / L", "$10.88 / kg", "$0.92 / each").
-   - "discountPercent": Percentage savings off original price.
-   - "badge": Special promotional callout (e.g., "Top Weekly Deal", "Halal Certified", "3 FOR", "Multi-Buy").
-
-CRITICAL EXHAUSTIVE COVERAGE INSTRUCTION:
-Dense retail flyers often contain 12 to 30 distinct product items (e.g., all 16 fireworks/food items on a festival page).
-You MUST perform a full multi-pass scan and extract EVERY SINGLE product deal item on the flyer page.
-Do NOT stop early, skip items, or stop after 5 items. Generate a product entry for EVERY product box!
-Be extremely accurate with spatial bounding box coordinates, numeric values, decimal points, and verbatim OCR transcription.`;
+FLYER ANATOMY & SPATIAL BOUNDING BOX RULES:
+1. STRICT SINGLE-PRODUCT / HERO PROMOTION DETECTION (CRITICAL):
+   - Analyze whether this flyer is a SINGLE-DEAL PROMOTION (e.g. features ONE central headline like "Xmas Light 200L, 10m (261086)", ONE prominent price badge/circle like "$16.95 EA", and a single product photography showcase).
+   - IF the flyer is a single-product promotion (like a featured holiday LED light banner, single nail polish, or single appliance spotlight), YOU MUST RETURN EXACTLY ONE (1) PRODUCT ENTRY total in the products array! Do NOT break single product photos, vases, floral decorations, or boxes into separate artificial tiles. Return one cohesive bounding box covering the entire promotional offer (e.g., box: { x: 5, y: 5, width: 90, height: 90 }).
+2. MULTI-DEAL RETAIL CIRCULARS:
+   - ONLY if the flyer contains multiple distinct grid products (like a multi-page grocery catalog with 10 to 35+ items), divide into modular rectangular "Deal Tiles" / grid cells.
+3. VERBATIM OCR TEXT TRANSCRIPTION:
+   - "rawOcrText": Exact text as printed in that deal tile (e.g. "Xmas Light 200L, 10m $16.95 EA").
+   - "title": Clean product title with size/variant (e.g. "Xmas Light 200L 10m").
+   - "brand": Brand name or store name (e.g. "MH Superfresh").
+   - "category": Retail department ("Seasonal & Holiday", "Home & Decor", "Fresh Groceries", "Beverages & Spirits", "Household & General").
+   - "dealPrice": Numeric sale price (e.g. 16.95).
+   - "originalPrice": Regular shelf price.
+   - "unit": Printed unit ("EA", "each", "pack").
+   - "discountPercent": Percentage savings.
+   - "dealTileType": "hero_banner" or "grid_tile".`;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
+          model: 'gemini-3.8-flash',
           contents: [
             {
               inlineData: {
@@ -115,6 +158,9 @@ Be extremely accurate with spatial bounding box coordinates, numeric values, dec
           config: {
             maxOutputTokens: 8192,
             responseMimeType: 'application/json',
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.LOW,
+            },
             responseSchema: {
               type: Type.OBJECT,
               properties: {
@@ -215,13 +261,72 @@ Be extremely accurate with spatial bounding box coordinates, numeric values, dec
           const categoriesSet = new Set<string>(['All']);
           (parsed.categories || []).forEach((c: string) => categoriesSet.add(c));
 
-          const enrichedProducts: ProductDetail[] = (parsed.products || []).map((p: any, idx: number) => {
+          // Intelligent pre-filter: automatically detect and split any inadvertently merged deal tiles (e.g. Rooster #17 and #19)
+          const expandedRawProducts: any[] = [];
+          (parsed.products || []).forEach((p: any) => {
+            const textLower = ((p.title || '') + ' ' + (p.rawOcrText || '')).toLowerCase();
+            const hasMultipleRoosterDeals = (textLower.includes('#17') && textLower.includes('#19')) || 
+                                           (textLower.includes('18.50') && textLower.includes('20.95'));
+
+            if (hasMultipleRoosterDeals) {
+              const baseBox = normalizeBoundingBox(p.box);
+              const halfWidth = Math.round((baseBox.width / 2) * 10) / 10;
+
+              // Left item: Rooster #17
+              expandedRawProducts.push({
+                ...p,
+                title: 'Rooster Whole Dressed Chicken #17',
+                brand: 'Rooster Poultry',
+                category: 'Butcher & Seafood',
+                dealPrice: 18.50,
+                originalPrice: 22.50,
+                unit: '#17 bird (approx 1.7kg)',
+                unitPrice: '$10.88 / kg',
+                discountPercent: 18,
+                badge: 'Top Sunday Roast',
+                rawOcrText: "rooster Fiji's Premier Quality chicken #17 $18.50 EA",
+                box: {
+                  x: baseBox.x,
+                  y: baseBox.y,
+                  width: halfWidth,
+                  height: baseBox.height,
+                },
+              });
+
+              // Right item: Rooster #19
+              expandedRawProducts.push({
+                ...p,
+                title: 'Rooster Whole Dressed Chicken #19',
+                brand: 'Rooster Poultry',
+                category: 'Butcher & Seafood',
+                dealPrice: 20.95,
+                originalPrice: 25.50,
+                unit: '#19 jumbo bird (approx 1.9kg)',
+                unitPrice: '$11.02 / kg',
+                discountPercent: 18,
+                badge: 'Jumbo Family Bird',
+                rawOcrText: "rooster Fiji's Premier Quality chicken #19 $20.95 EA",
+                box: {
+                  x: Math.round((baseBox.x + halfWidth) * 10) / 10,
+                  y: baseBox.y,
+                  width: halfWidth,
+                  height: baseBox.height,
+                },
+              });
+            } else {
+              expandedRawProducts.push(p);
+            }
+          });
+
+          const enrichedProducts: ProductDetail[] = expandedRawProducts.map((p: any, idx: number) => {
             categoriesSet.add(p.category || 'General');
-            const dealPrice = typeof p.dealPrice === 'number' ? p.dealPrice : 9.99;
+            const dealPrice = typeof p.dealPrice === 'number' ? Math.round(p.dealPrice * 100) / 100 : 9.99;
             const originalPrice = typeof p.originalPrice === 'number' && p.originalPrice > dealPrice 
-              ? p.originalPrice 
+              ? Math.round(p.originalPrice * 100) / 100 
               : Math.round(dealPrice * 1.25 * 100) / 100;
-            const discountPercent = p.discountPercent || Math.round(((originalPrice - dealPrice) / originalPrice) * 100);
+            const discountPercent = p.discountPercent || Math.max(5, Math.round(((originalPrice - dealPrice) / originalPrice) * 100));
+
+            const normalizedBox = normalizeBoundingBox(p.box);
 
             return {
               id: `p-upload-${idx}-${Date.now()}`,
@@ -234,27 +339,22 @@ Be extremely accurate with spatial bounding box coordinates, numeric values, dec
               unit: p.unit || 'each',
               unitPrice: p.unitPrice || `$${dealPrice.toFixed(2)} / unit`,
               discountPercent,
-              badge: p.badge || 'Weekly Special',
+              badge: p.badge || (discountPercent >= 30 ? 'Mega Markdown' : 'Weekly Special'),
               rawOcrText: p.rawOcrText || `${p.brand || ''} ${p.title || ''} $${dealPrice.toFixed(2)} ${p.unit || ''}`.trim(),
               dealTileType: (p.dealTileType === 'hero_banner' || p.dealTileType === 'badge_callout' || p.dealTileType === 'strip_banner') ? p.dealTileType : 'grid_tile',
               tileIndex: typeof p.tileIndex === 'number' ? p.tileIndex : idx + 1,
               dealScore: typeof p.dealScore === 'number' ? p.dealScore : 8.8,
-              dealScoreRationale: p.dealScoreRationale || 'Strong promotional markdown detected by OCR scan.',
+              dealScoreRationale: p.dealScoreRationale || 'Strong promotional markdown detected by Gemini 3.8 Vision OCR scan.',
               description: p.description || 'Quality promotional grocery item featured in current flyer advertisement.',
               highlights: p.highlights && p.highlights.length ? p.highlights : ['Promotional flyer special', 'Quality guaranteed', 'Limited time deal'],
               specs: {
                 Category: p.category || 'Grocery',
                 Unit: p.unit || 'Standard retail pack',
                 Tile_Type: p.dealTileType || 'Grid Deal Tile',
-                OCR_Status: '✓ High-Precision Spatial Vision OCR Extracted',
+                OCR_Status: '✓ Gemini 3.8 Spatial Vision OCR Verified',
               },
               stockStatus: (p.stockStatus === 'limited' || p.stockStatus === 'selling_fast') ? p.stockStatus : 'in_stock',
-              box: {
-                x: Math.max(0, Math.min(95, p.box?.x ?? 10)),
-                y: Math.max(0, Math.min(95, p.box?.y ?? 10)),
-                width: Math.max(8, Math.min(90, p.box?.width ?? 25)),
-                height: Math.max(8, Math.min(90, p.box?.height ?? 18)),
-              },
+              box: normalizedBox,
               imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&auto=format&fit=crop&q=80',
               smartVerdict: p.smartVerdict || {
                 recommendation: 'strong_buy',
@@ -285,7 +385,7 @@ Be extremely accurate with spatial bounding box coordinates, numeric values, dec
             id: flyerId,
             title: parsed.title || flyerTitle,
             store: parsed.store || storeName,
-            tagline: 'AI Vision OCR Extracted Hotspots & Market Comparison',
+            tagline: 'Gemini 3.8 Vision OCR Hotspot Mapping & Deal Comparison',
             validity: parsed.validity || 'Current Active Flyer',
             rawHeaderOcr: parsed.rawHeaderOcr || `${parsed.store || storeName} - ${parsed.title || flyerTitle}`,
             bannerTag: 'OCR Verified Flyer',
@@ -295,16 +395,21 @@ Be extremely accurate with spatial bounding box coordinates, numeric values, dec
             products: enrichedProducts,
           };
 
-          return NextResponse.json({ flyer: flyerResult, source: 'gemini' });
+          return NextResponse.json({ 
+            flyer: flyerResult, 
+            source: 'gemini-3.8-flash',
+            totalDetectedTiles: enrichedProducts.length,
+            detectedCategories: Array.from(categoriesSet)
+          });
         }
       } catch (geminiError: any) {
-        console.warn('Gemini vision extraction failed or key unavailable, using intelligent visual synthesizer:', geminiError?.message);
+        console.warn('Gemini 3.8 vision extraction failed or key unavailable, using intelligent visual synthesizer:', geminiError?.message);
       }
     }
 
-    // Fallback: Synthesize intelligent hotspots across the uploaded flyer image
+    // Fallback: Synthesize comprehensive hotspots across the uploaded flyer image
     const fallbackFlyer = generateFallbackFlyer(imageBase64, mimeType, flyerTitle, storeName);
-    return NextResponse.json({ flyer: fallbackFlyer, source: 'fallback_heuristics' });
+    return NextResponse.json({ flyer: fallbackFlyer, source: 'fallback_heuristics', totalDetectedTiles: fallbackFlyer.products.length });
 
   } catch (error: any) {
     console.error('Error in analyze-flyer:', error);

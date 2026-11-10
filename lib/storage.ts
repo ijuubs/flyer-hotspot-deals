@@ -83,3 +83,23 @@ export function useSyncedStorage<T>(key: string, fallback: T): [T, (val: T | ((p
 
   return [value, setValue];
 }
+
+/**
+ * Completely resets client storage database, wiping custom flyers & cart items,
+ * and restoring pristine default catalog.
+ */
+export function resetAppDatabase(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem('flyerspot_custom_flyers');
+    localStorage.removeItem('flyerspot_cart');
+    localStorage.removeItem('flyerspot_deleted_flyers');
+    localStorage.setItem('flyerspot_db_version', 'v4_clean');
+    emitChange('flyerspot_custom_flyers');
+    emitChange('flyerspot_cart');
+    emitChange('flyerspot_deleted_flyers');
+  } catch (e) {
+    console.error('Error resetting app database:', e);
+  }
+}
+
