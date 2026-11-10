@@ -1,0 +1,6 @@
+{
+  "name": "FlyerSpot - AI Interactive Flyer & Deal Comparison",
+  "description": "Convert static retail flyer images into interactive hotspot zones with instant product comparisons, deal ratings, and smart shopping tools.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
